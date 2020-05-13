@@ -39,28 +39,29 @@ conn = psycopg2.connect(
     )
 cursor = conn.cursor()
 
-create_character_table = """
-CREATE TABLE Titanic_Stats (
-  id SERIAL PRIMARY KEY,
-  Survived Int4,  
-  Pclass Int4,
-  Name VARCHAR(20),
-  Sex VARCHAR(5),
-  Age INT4,
-  Siblings/Spouses Aboard Int4,
-  Parents/Children Aboard Int4,
-  FARE float8,
-  );
+table_creation_sql = """
+DROP TABLE IF EXISTS passengers;
+CREATE TABLE IF NOT EXISTS passengers (
+    id  SERIAL PRIMARY KEY,
+    "survived" int4, -- consider boolean here
+    "pclass" int4,
+    "name" text,
+    "sex" text,
+    "age" int4,
+    "sib_spouse_count" int4,
+    "parent_child_count" int4,
+    "fare" float8
+);
 """
-cursor.execute(create_character_table)
+cursor.execute(table_creation_sql)
 #convert df to readable in postgres
 list_of_tuples = list(df.to_records(index=False))
 
 insertion_query = f"INSERT INTO passengers (survived, pclass, name, sex, age, sib_spouse_count, parent_child_count, fare) VALUES %s"
-execute_values(cursor, insertion_query, list_of_tuples) # third param: data as a list of tuples!
+execute_values(cursor, insertion_query, list_of_tuples)
 
+conn.commit() # actually save the records / run the transaction to insert rows
 
-conn.commit
 cursor.close()
 conn.close()
 
